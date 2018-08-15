@@ -82,5 +82,5 @@ class RandomLevel(Level):
                     self.start = Door(images["s"], (i * 32, j * 32), True)
                     self.walls.add(self.start)
                 elif game_map[i][j] == "e":
-                    self.exit = Door(images["e"], (i * 32, j * 32), False)
+                    self.exit = Door(images["e"], (i * 32, j * 32), True)
                     self.walls.add(self.exit)

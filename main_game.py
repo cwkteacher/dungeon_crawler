@@ -18,6 +18,17 @@ player = Player("images/player/superhero.gif", (16, 16))
 levels = []
 level_num = 0
 current_level = None
+font = pygame.font.SysFont('oldenglishtext', 32)
+
+
+# initializes globals to starting state
+def restart():
+    global player, levels, level_num, current_level
+    player = Player("images/player/superhero.gif", (16, 16))
+    levels = [RandomLevel(player, images)]
+    level_num = 0
+    current_level = levels[level_num]
+    player.up_level(current_level)
 
 
 def change_level(change):
@@ -37,15 +48,22 @@ def change_level(change):
 
 def main():
     global screen, level_num, current_level
-    levels.append(RandomLevel(player, images))
-    current_level = levels[level_num]
-    player.up_level(current_level)
+    restart()
+    restart_pressed = False
     while True:
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == QUIT:
                 sys.exit()
             if event.type == KEYDOWN:
+                # confirm/ exit restart if triggered
+                if restart_pressed:
+                    if event.key == K_RETURN:
+                        restart()
+                        restart_pressed = False
+                    elif event.key == K_ESCAPE:
+                        restart_pressed = False
+                    continue
                 # screen controls
                 if event.key == K_f:
                     screen = pygame.display.set_mode(size, FULLSCREEN)
@@ -60,9 +78,19 @@ def main():
                     player.change_x(32)
                 elif event.key == K_LEFT:
                     player.change_x(-32)
-        change_level(current_level.update())
+                # initiates restart prompt
+                elif event.key == K_r:
+                    restart_pressed = True
+        # update the level if not is restart mode
+        if not restart_pressed:
+            change_level(current_level.update())
         screen.fill(color)
         current_level.draw(screen)
+        if restart_pressed:
+            text = font.render("Press Enter to restart, press ESC to cancel", True, (230, 230, 230))
+            text_rect = text.get_rect()
+            text_rect.center = (width//2, height//2)
+            screen.blit(text, text_rect)
         pygame.display.flip()
 
 
