@@ -3,21 +3,46 @@ from tiles import *
 
 
 class Level(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, player):
         super().__init__()
         # groups
         self.walls = pygame.sprite.Group()
         self.floor = pygame.sprite.Group()
+        self.player = player
+        self.start_pos = (0, 0)
+        self.end_pos = (0, 0)
+        self.exit = None
+        self.start = None
+
+    def update(self):
+        return self.player.update()
 
     def draw(self, screen):
         self.floor.draw(screen)
+        self.player.draw(screen)
         self.walls.draw(screen)
 
 
 class RandomLevel(Level):
-    def __init__(self, images):
-        super().__init__()
+    def __init__(self, player, images):
+        super().__init__(player)
         self.generate_level(images)
+
+    def place_player(self, game_map):
+        for i in range(len(game_map)):
+            for j in range(1, len(game_map[0])):
+                if game_map[i][j] == "f":
+                    self.start_pos = (i * 32, j * 32)
+                    game_map[i][j - 1] = "s"
+                    return
+
+    def place_exit(self, game_map):
+        for i in range(len(game_map) - 2, 0, -1):
+            for j in range(1, len(game_map[0]) - 1):
+                if game_map[i][j + 1] == "f":
+                    self.end_pos = (i * 32, (j + 1) * 32)
+                    game_map[i][j] = "e"
+                    return
 
     def generate_level(self, images):
         screen_info = pygame.display.Info()
@@ -44,6 +69,8 @@ class RandomLevel(Level):
                 tile[1] += 1
             elif move == 4 and tile[1] > 1:  # move west
                 tile[1] -= 1
+        self.place_player(game_map)
+        self.place_exit(game_map)
         # create tiles based on the contents of the map list
         for i in range(len(game_map)):
             for j in range(len(game_map[i])):
@@ -51,3 +78,9 @@ class RandomLevel(Level):
                     self.walls.add(Tile(images["w"], (i * 32, j * 32)))
                 elif game_map[i][j] == "f":
                     self.floor.add(Tile(images["f"], (i * 32, j * 32)))
+                elif game_map[i][j] == "s":
+                    self.start = Door(images["s"], (i * 32, j * 32), True)
+                    self.walls.add(self.start)
+                elif game_map[i][j] == "e":
+                    self.exit = Door(images["e"], (i * 32, j * 32), False)
+                    self.walls.add(self.exit)
