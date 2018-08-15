@@ -1,4 +1,6 @@
 import pygame, sys
+import pickle
+import os.path
 from pygame.locals import *
 from level import *
 from player import *
@@ -19,6 +21,41 @@ levels = []
 level_num = 0
 current_level = None
 font = pygame.font.SysFont('oldenglishtext', 32)
+
+
+def load_game():
+    # Loads saved game state using pickle. The
+    # .load() methods re-create any image objects
+    # since pickle cannot store Surface objects.
+    global player, levels, level_num, current_level
+    if os.path.isfile("save"):
+        f = open("save", "rb")
+        player = pickle.load(f)
+        player.load()
+        level_num = pickle.load(f)
+        levels = pickle.load(f)
+        for l in levels:
+            l.load(player)
+        current_level = levels[level_num]
+        player.level = current_level
+        return True
+    else:
+        return False
+
+
+def save_game():
+    # Saves current game state using pickle. The
+    # .save() methods remove any image objects
+    # prior to dumping since pickle cannot
+    # store Surface objects.
+    f = open("save", "wb")
+    player.save()
+    pickle.dump(player, f)
+    pickle.dump(level_num, f)
+    for level in levels:
+        level.save()
+    pickle.dump(levels, f)
+    f.close()
 
 
 # initializes globals to starting state
@@ -48,12 +85,14 @@ def change_level(change):
 
 def main():
     global screen, level_num, current_level
-    restart()
+    if not load_game():
+        restart()
     restart_pressed = False
     while True:
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == QUIT:
+                save_game()
                 sys.exit()
             if event.type == KEYDOWN:
                 # confirm/ exit restart if triggered

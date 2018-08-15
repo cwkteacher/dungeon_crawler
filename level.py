@@ -22,6 +22,20 @@ class Level(pygame.sprite.Sprite):
         self.player.draw(screen)
         self.walls.draw(screen)
 
+    def save(self):
+        for f in self.floor:
+            f.save()
+        for w in self.walls:
+            w.save()
+        self.player = None
+
+    def load(self, player):
+        for f in self.floor:
+            f.load()
+        for w in self.walls:
+            w.load()
+        self.player = player
+
 
 class RandomLevel(Level):
     def __init__(self, player, images):

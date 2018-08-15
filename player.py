@@ -4,6 +4,7 @@ import pygame
 class Player(pygame.sprite.Sprite):
     def __init__(self, path, pos):
         super().__init__()
+        self.path = path
         self.image = pygame.image.load(path)
         self.rect = self.image.get_rect()
         self.rect.center = pos
@@ -41,3 +42,10 @@ class Player(pygame.sprite.Sprite):
 
     def change_y(self, change):
         self.movement[1] = change
+
+    def save(self):
+        self.image = None
+        self.level = None
+
+    def load(self):
+        self.image = pygame.image.load(self.path)
