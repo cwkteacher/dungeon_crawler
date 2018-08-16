@@ -1,4 +1,5 @@
 import pygame, random
+from enemies import *
 from tiles import *
 
 
@@ -8,39 +9,59 @@ class Level(pygame.sprite.Sprite):
         # groups
         self.walls = pygame.sprite.Group()
         self.floor = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
+        self.messages = pygame.sprite.Group()
         self.player = player
+        self.chest = Chest("images/chest.gif", (0, 0))
+        self.walls.add(self.chest)
         self.start_pos = (0, 0)
         self.end_pos = (0, 0)
         self.exit = None
         self.start = None
 
     def update(self):
+        self.enemies.update()
+        self.messages.update()
         return self.player.update()
 
     def draw(self, screen):
         self.floor.draw(screen)
+        self.enemies.draw(screen)
         self.player.draw(screen)
         self.walls.draw(screen)
+        self.messages.draw(screen)
 
     def save(self):
+        for e in self.enemies:
+            e.save()
         for f in self.floor:
             f.save()
         for w in self.walls:
             w.save()
+        for m in self.messages:
+            m.save()
         self.player = None
 
     def load(self, player):
+        for e in self.enemies:
+            e.load(self)
         for f in self.floor:
             f.load()
         for w in self.walls:
             w.load()
+        for m in self.messages:
+            m.load()
         self.player = player
 
 
 class RandomLevel(Level):
-    def __init__(self, player, images):
+    def __init__(self, player, images, mult, enemy_num):
         super().__init__(player)
-        self.generate_level(images)
+
+        self.generate_level(images, mult, enemy_num)
+
+    def draw(self, screen):
+        super().draw(screen)
 
     def place_player(self, game_map):
         for i in range(len(game_map)):
@@ -58,14 +79,14 @@ class RandomLevel(Level):
                     game_map[i][j] = "e"
                     return
 
-    def generate_level(self, images):
+    def generate_level(self, images, mult, enemy_num):
         screen_info = pygame.display.Info()
         game_map = []
         # initialize entire map to walls
         for i in range((screen_info.current_w // 32) + 1):
             game_map.append(["w"] * ((screen_info.current_h // 32) + 1))
         # calculate amount of tiles to convert into floor tiles
-        fnum = int((len(game_map) * len(game_map[0])) * .5)
+        fnum = int((len(game_map) * len(game_map[0])) * mult)
         # current number of floor tiles
         count = 0
         # starting tile for dungeon generation
@@ -96,5 +117,9 @@ class RandomLevel(Level):
                     self.start = Door(images["s"], (i * 32, j * 32), True)
                     self.walls.add(self.start)
                 elif game_map[i][j] == "e":
-                    self.exit = Door(images["e"], (i * 32, j * 32), True)
+                    self.exit = Door(images["e"], (i * 32, j * 32), False)
                     self.walls.add(self.exit)
+        # add in some enemies
+        for i in range(enemy_num):
+            self.enemies.add(Enemy("images/monsters/bat.gif", random.choice(self.floor.sprites()).rect.center, self))
+        self.chest.rect.center = random.choice(self.floor.sprites()).rect.center
